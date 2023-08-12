@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:chamber_app/pages/camera_page.dart';
+import '';
+
 void main(List<String> args) {
   runApp(MyApp());
 }
@@ -7,10 +9,10 @@ void main(List<String> args) {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override 
+  @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home:CameraPage(),
+      home: CameraPage(),
     );
   }
 }

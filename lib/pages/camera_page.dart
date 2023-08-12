@@ -1,9 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print
-import 'package:flutter/cupertino.dart';
-import 'package:network_info_plus/network_info_plus.dart';
+
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -18,36 +17,8 @@ class _CameraPageState extends State<CameraPage> {
   bool isAlertSet = false;
   @override
   void initState() {
-    getConnectvity();
     super.initState();
-  }
-
-  getConnectvity() {
-    subscription = Connectivity()
-        .onConnectivityChanged
-        .listen((ConnectivityResult result) async {
-      final info = NetworkInfo();
-      info.getWifiName();
-      final wifiName = await info.getWifiName();
-      print(wifiName);
-      if ((wifiName == "redminote8pro") && (isAlertSet == false)) {
-        isDeviceConnected = true;
-        setState(() {
-          isAlertSet = false;
-        });
-      } else {
-        isDeviceConnected = false;
-        showDailogBox();
-        setState(() {
-          isAlertSet = true;
-        });
-      }
-    });
-    @override
-    void dispose() {
-      subscription.cancel();
-      super.dispose();
-    }
+    checkWifiInfo();
   }
 
   @override
@@ -67,7 +38,11 @@ class _CameraPageState extends State<CameraPage> {
               children: [
                 Expanded(child: Icon(Icons.flash_on)),
                 Expanded(child: SizedBox()),
-                Expanded(child: Icon(Icons.network_wifi_outlined)),
+                Expanded(
+                    child: isDeviceConnected
+                        ? Icon(Icons.network_wifi_outlined)
+                        : Icon(Icons
+                            .signal_wifi_connected_no_internet_4_outlined)),
               ],
             ),
           ),
@@ -119,38 +94,14 @@ class _CameraPageState extends State<CameraPage> {
     ));
   }
 
-  showDailogBox() => showCupertinoDialog<String>(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-            title: const Text("Not Connected"),
-            content: const Text(
-                "Please make sure you ar connected to te portable UV chamber"),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context, 'Cancel');
-                  setState(() {
-                    isAlertSet = false;
-                  });
-                  final info = NetworkInfo();
-                  info.getWifiName();
-                  final wifiName = await info.getWifiName();
-                  print(wifiName);
-                  if ((wifiName == "redminote8pro") && (isAlertSet == false)) {
-                    isDeviceConnected = true;
-                    setState(() {
-                      isAlertSet = false;
-                    });
-                  } else {
-                    isDeviceConnected = false;
-                    showDailogBox();
-                    setState(() {
-                      isAlertSet = true;
-                    });
-                  }
-                },
-                child: const Text("OK"),
-              )
-            ],
-          ));
+final info = NetworkInfo();
+  void checkWifiInfo() async {
+    String? wifi = await info.getWifiName();
+    print(wifi);
+    if (wifi == "\"PHARMA\"") {
+      setState(() {
+        isDeviceConnected = true;
+      });
+    }
+  }
 }
