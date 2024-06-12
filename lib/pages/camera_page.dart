@@ -1,8 +1,9 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print, prefer_typing_uninitialized_variables
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -13,12 +14,17 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> {
   late StreamSubscription subscription;
+  final wsUrl = Uri.parse('ws://192.168.0.1:8888');
+  var channel;
+
   var isDeviceConnected = false;
-  bool isAlertSet = false;
+  var state = false;
+  // bool  = false;
   @override
   void initState() {
     super.initState();
     checkWifiInfo();
+    connectWebSocket();
   }
 
   @override
@@ -48,9 +54,23 @@ class _CameraPageState extends State<CameraPage> {
           ),
         ),
         Expanded(
-          child: Container(
-            color: Colors.grey,
-          ),
+          child: isDeviceConnected
+              ? state
+                  ? Container(
+                      color: Colors.grey,
+                      child: sensorData(
+                        channel: channel,
+                      ),
+                    )
+                  : Container(
+                      color: Colors.black, child: sensorData(channel: channel))
+              : Container(
+                  color: Colors.grey,
+                  child: Center(
+                    child: ElevatedButton(
+                        onPressed: checkWifiInfo, child: Text("Recheck WiFi")),
+                  ),
+                ),
         ),
         Container(
           height: 150,
@@ -62,7 +82,7 @@ class _CameraPageState extends State<CameraPage> {
                 width: 30,
               ),
               Container(
-                color: Colors.grey,
+                color: state ? Colors.green : Colors.redAccent,
                 height: 50,
                 width: 50,
               ),
@@ -94,7 +114,29 @@ class _CameraPageState extends State<CameraPage> {
     ));
   }
 
-final info = NetworkInfo();
+  StreamBuilder<dynamic> sensorData({required channel}) {
+    return StreamBuilder(
+      stream: channel.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          var screenWidth = MediaQuery.of(context).size.width;
+          var screenHeight = MediaQuery.of(context).size.height;
+          return Container(
+            child: Image.memory(
+              snapshot.data,
+              gaplessPlayback: true,
+              width: screenWidth,
+              height: screenHeight,
+            ),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+
+  final info = NetworkInfo();
   void checkWifiInfo() async {
     String? wifi = await info.getWifiName();
     print(wifi);
@@ -103,5 +145,22 @@ final info = NetworkInfo();
         isDeviceConnected = true;
       });
     }
+  }
+
+  void connectWebSocket() async {
+    channel = WebSocketChannel.connect(wsUrl);
+    await channel.ready;
+    print("jayesh");
+    // print(channel.stream.listen);
+    channel.stream.listen((message) {
+      print(message);
+      setState(() {
+        if (message == "connected") {
+          state = true;
+        } else {
+          state = false;
+        }
+      });
+    });
   }
 }
